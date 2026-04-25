@@ -7,6 +7,40 @@ both single-task and conversational agents.
 
 `pyproject.toml` has `openai-agents`. Imports include `from agents import Agent, Runner, ...`.
 
+## Starter snippet (fresh projects)
+
+Use when the user has no agent yet. Copy this into `agent.py`, run it once to confirm output, *then* layer the Reflect integration below on top.
+
+```python
+"""Minimal OpenAI Agents SDK starter."""
+from __future__ import annotations
+import asyncio, os
+
+from agents import Agent, Runner, WebSearchTool
+
+
+async def main(prompt: str) -> str:
+    agent = Agent(
+        name="Assistant",
+        instructions="You are a helpful assistant. Answer concisely.",
+        tools=[WebSearchTool()],
+        model="gpt-5.4",
+    )
+    result = await Runner.run(agent, input=prompt)
+    return result.final_output
+
+
+if __name__ == "__main__":
+    print(asyncio.run(main(os.environ.get("PROMPT", "What is the capital of France?"))))
+```
+
+`pyproject.toml`:
+
+```toml
+[project]
+dependencies = ["openai-agents>=0.4.0", "reflect-sdk>=0.5.0"]
+```
+
 ## Single-task (one prompt → one answer)
 
 ```python

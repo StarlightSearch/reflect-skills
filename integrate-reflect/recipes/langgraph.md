@@ -16,6 +16,60 @@ at construction, then `ctx.set_output(task=late_intent)` to override at submit.
 `pyproject.toml` has `langgraph` and/or `langchain-*`. Imports include
 `from langgraph.graph import StateGraph`.
 
+## Starter snippet (fresh projects)
+
+Minimal multi-turn graph: one node that calls the LLM with full message history. Copy into `agent.py`, run it once, *then* add the `retrieve` and `record` nodes from the integration below.
+
+```python
+"""Minimal LangGraph multi-turn starter."""
+from __future__ import annotations
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_openai import ChatOpenAI
+from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
+
+
+class State(TypedDict):
+    messages: Annotated[list[BaseMessage], add_messages]
+
+
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
+
+
+def respond(state: State) -> State:
+    return {"messages": [AIMessage(content=llm.invoke(state["messages"]).content)]}
+
+
+def build_graph():
+    g = StateGraph(State)
+    g.add_node("respond", respond)
+    g.set_entry_point("respond")
+    g.add_edge("respond", END)
+    return g.compile()
+
+
+if __name__ == "__main__":
+    app = build_graph()
+    state: State = {"messages": []}
+    print("Bot. Say 'bye' to exit.")
+    while True:
+        u = input("you: ").strip()
+        if u.lower() in {"bye", "thanks"}:
+            break
+        state["messages"].append(HumanMessage(content=u))
+        state = app.invoke(state)
+        print(f"bot: {state['messages'][-1].content}")
+```
+
+`pyproject.toml`:
+
+```toml
+[project]
+dependencies = ["langgraph>=0.2.0", "langchain-openai>=0.2.0", "reflect-sdk>=0.5.0"]
+```
+
 ## Node placement
 
 ```

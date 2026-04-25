@@ -1,6 +1,6 @@
 ---
 name: integrate-reflect
-description: Use when the user wants to add Reflect long-term memory to an existing Python agent, give an agent the ability to learn from past runs, wire client.trace into an agent loop, integrate the reflect-sdk, set up LLM-as-judge for an existing Reflect integration, or debug empty ctx.memories / stagnant q-values. Skip for general docs lookup (point at https://docs.starlight-search.com/llms-full.txt), MCP-only setup with no SDK code, or non-Python projects.
+description: Use when the user wants to add Reflect long-term memory to a Python agent project — whether wiring it into an existing agent loop or starting a fresh project from scratch with Reflect baked in. Triggers include "add Reflect to my agent", "give my agent memory", "build an agent with Reflect", "wire client.trace", "integrate reflect-sdk", "set up LLM-as-judge for Reflect", and debugging "ctx.memories is empty" / "q-values aren't moving". Skip for general docs lookup (point at https://docs.starlight-search.com/llms-full.txt), MCP-only setup with no SDK code, or non-Python projects.
 ---
 
 # Integrate Reflect
@@ -58,7 +58,35 @@ for name in ['__init__', 'trace', 'trace_async', 'create_trace', 'query_memories
 
 If `inspect.signature` reveals a kwarg you weren't planning to pass (e.g. `metadata`, `reference_context`, `alpha`), reconsider — those are usually load-bearing.
 
-## Step 1 — Determine agent shape
+## Step 1 — Project state and agent shape
+
+### 1a — Existing agent or fresh project?
+
+**Detect first.** Look for agent-shaped imports in the user's source files:
+
+```bash
+grep -rEn "from agents import|from claude_agent_sdk|from langgraph|from pydantic_ai|from openai import OpenAI|from anthropic import" --include="*.py" .
+```
+
+Also check `pyproject.toml` / `requirements.txt` for `openai-agents`, `claude-agent-sdk`, `langgraph`, `pydantic-ai`, `openai`, `anthropic`, `litellm`.
+
+**If matches found** → existing agent. Confirm the framework with the user, skip to 1b.
+
+**If no matches found** → fresh project. Ask the user:
+
+> "I don't see an existing agent in this project. Are you starting fresh? If so, which framework do you want to build on?
+> 1. **OpenAI Agents SDK** — clean Agent/Runner abstraction; best if you're in the OpenAI ecosystem
+> 2. **Claude Agent SDK** — native streaming + tool use; best with Anthropic models
+> 3. **LangGraph** — graph-shaped workflows; best for multi-turn or branching control flow
+> 4. **Pydantic AI** — type-strict structured-output agents
+> 5. **Generic loop** — direct `openai`/`anthropic`/`litellm` calls, no agent framework
+> 6. *Already have one elsewhere* — point me at the file"
+
+Once the user picks (or says "I'm not sure"; default to **5 / Generic** as the lowest-commitment path), copy the **"Starter snippet"** section from `recipes/<framework>.md` into the project as the seed agent code. Then continue through the rest of this skill with that as the "existing" agent.
+
+**Don't skip the starter step.** "Just write me an agent + Reflect integration" is two tasks; doing them simultaneously usually produces a fragile result where neither half is right. Get a working bare agent first (run it once, see output), *then* layer Reflect on top.
+
+### 1b — Single-task or conversational?
 
 **Ask the user (or detect from code):**
 

@@ -10,6 +10,41 @@ Fallback for anything not covered by another recipe. Wrap whatever your
 - LiteLLM-based loops
 - Any other Python agent
 
+## Starter snippet (fresh projects)
+
+Use when the user has no agent yet and picked "Generic / not sure". Lowest-commitment scaffold — direct OpenAI SDK call. Copy into `agent.py`, run once, *then* layer Reflect on top.
+
+```python
+"""Minimal direct-SDK starter."""
+from __future__ import annotations
+import os
+
+from openai import OpenAI
+
+oai = OpenAI()
+
+
+def solve(task: str) -> str:
+    resp = oai.chat.completions.create(
+        model="gpt-5.4",
+        messages=[{"role": "user", "content": task}],
+    )
+    return resp.choices[0].message.content or ""
+
+
+if __name__ == "__main__":
+    print(solve(os.environ.get("TASK", "What is the capital of France?")))
+```
+
+`pyproject.toml`:
+
+```toml
+[project]
+dependencies = ["openai>=1.50.0", "reflect-sdk>=0.5.0"]
+```
+
+Swap `openai` for `anthropic` (with a `client.messages.create` call) or `litellm.completion` if the user prefers — same shape.
+
 ## Single-task pattern
 
 ```python

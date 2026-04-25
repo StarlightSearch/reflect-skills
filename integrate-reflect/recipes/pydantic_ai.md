@@ -8,6 +8,39 @@ trace boundary. Pass `ctx.augmented_task` as the input.
 `pyproject.toml` has `pydantic-ai`. Imports include
 `from pydantic_ai import Agent`.
 
+## Starter snippet (fresh projects)
+
+Use when the user has no agent yet. Copy into `agent.py`, run it once, *then* layer Reflect on top.
+
+```python
+"""Minimal Pydantic AI starter."""
+from __future__ import annotations
+import asyncio, os
+
+from pydantic_ai import Agent
+
+agent = Agent(
+    "anthropic:claude-sonnet-4-6",
+    system_prompt="You are a helpful assistant. Answer concisely.",
+)
+
+
+async def main(prompt: str) -> str:
+    result = await agent.run(prompt)
+    return str(result.output)
+
+
+if __name__ == "__main__":
+    print(asyncio.run(main(os.environ.get("PROMPT", "What is the capital of France?"))))
+```
+
+`pyproject.toml`:
+
+```toml
+[project]
+dependencies = ["pydantic-ai>=0.0.13", "reflect-sdk>=0.5.0"]
+```
+
 ## Single-task
 
 ```python

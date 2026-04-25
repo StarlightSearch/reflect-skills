@@ -9,6 +9,40 @@ Wraps the `claude_agent_sdk.query(...)` or `Agent` invocation in
 `pyproject.toml` has `claude-agent-sdk` or `anthropic[agent]`. Imports include
 `from claude_agent_sdk import ...`.
 
+## Starter snippet (fresh projects)
+
+Use when the user has no agent yet. Copy into `agent.py`, run it once, *then* layer Reflect on top.
+
+```python
+"""Minimal Claude Agent SDK starter."""
+from __future__ import annotations
+import os
+
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+
+def main(prompt: str) -> str:
+    options = ClaudeAgentOptions(
+        system_prompt="You are a helpful assistant. Answer concisely.",
+        max_turns=5,
+    )
+    parts: list[str] = []
+    for msg in query(prompt=prompt, options=options):
+        parts.append(str(msg.content))
+    return parts[-1] if parts else ""
+
+
+if __name__ == "__main__":
+    print(main(os.environ.get("PROMPT", "What is the capital of France?")))
+```
+
+`pyproject.toml`:
+
+```toml
+[project]
+dependencies = ["claude-agent-sdk>=0.1.0", "reflect-sdk>=0.5.0"]
+```
+
 ## Single-task
 
 ```python
